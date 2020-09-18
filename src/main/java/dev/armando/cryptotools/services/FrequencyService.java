@@ -8,6 +8,7 @@ import dev.armando.cryptotools.responses.FrequencyResponse;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
+import java.text.DecimalFormat;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -16,49 +17,60 @@ import java.util.stream.IntStream;
 @Service
 public class FrequencyService {
 
+    private static final long MOST_RELEVANT_RESULT_AMOUNT = 20;
+
     private final List<Frequency> frequencies;
+
+    DecimalFormat df;
 
     public FrequencyService(List<Frequency> frequencies) {
         this.frequencies = frequencies;
+        df = new DecimalFormat("##.###");
     }
 
-    private String getProbableLanguage(List<Double> frequencies) {
+    private Map<String, Double> getProbableLanguage(List<Double> frequencies) {
         if (CollectionUtils.isEmpty(frequencies)) {
-            return "Unknown";
+            return null;
         }
         Map<String, Double> probabilities = new HashMap<>();
         for (Frequency f : this.frequencies) {
             double probability = 0;
             for (int i = 0; i < f.getValues().size(); i++) {
-                double ocurrence = 0;
+                double occurrence = 0;
                 if (i < frequencies.size()) {
-                    ocurrence = frequencies.get(i);
+                    occurrence = frequencies.get(i);
                 }
-                probability += Math.pow(f.getValues().get(i) - ocurrence, 2);
+                probability += Math.pow(f.getValues().get(i) - occurrence, 2);
             }
-            probabilities.put(f.getLanguage(), probability);
+            probabilities.put(f.getLanguage(), round(probability));
         }
-        return probabilities.entrySet().stream().min(Map.Entry.comparingByValue()).orElseThrow().getKey();
+        return probabilities;
     }
 
-    public FrequencyResponse getFrequencies(String texto, Sorting sorting) {
+    public FrequencyResponse getFrequencies(String text, Sorting sorting, Long limit) {
         if (Objects.isNull(sorting)) {
             sorting = Sorting.PERCENTAGE;
         }
 
-        List<String> letters = extract(texto, Separation.LETTERS);
-        List<String> brigrams = extract(texto, Separation.BIGRAMS);
-        List<String> trigrams = extract(texto, Separation.TRIGRAMS);
+        if (Objects.isNull(limit) || limit == 0) {
+            limit = MOST_RELEVANT_RESULT_AMOUNT;
+        }
 
-        List<FrequencyResult> letterFrequency = calculatePercentages(letters);
+        List<String> letters = extract(text, Separation.LETTERS, Long.MAX_VALUE);
+        List<String> brigrams = extract(text, Separation.BIGRAMS, limit);
+        List<String> trigrams = extract(text, Separation.TRIGRAMS, limit);
+
+        List<FrequencyResult> letterFrequency = calculatePercentages(letters, sorting);
         List<FrequencyResult> bigramsFrequency = calculatePercentages(brigrams);
         List<FrequencyResult> trigramsFrequency = calculatePercentages(trigrams);
 
         List<Double> percentages = letterFrequency.stream().map(FrequencyResult::getPercentage).collect(Collectors.toList());
-        String probableLanguage = getProbableLanguage(percentages);
+        Map<String, Double> languageProbabilities = getProbableLanguage(percentages);
+        String probableLanguage = Objects.requireNonNull(languageProbabilities).entrySet().stream().min(Map.Entry.comparingByValue()).orElseThrow().getKey();
 
         return FrequencyResponse.builder()
                 .probableLanguage(probableLanguage)
+                .languageProbabilities(languageProbabilities)
                 .letters(letterFrequency)
                 .bigrams(bigramsFrequency)
                 .trigrams(trigramsFrequency)
@@ -66,19 +78,31 @@ public class FrequencyService {
     }
 
     private List<FrequencyResult> calculatePercentages(List<String> terms) {
-        Map<String, Long> counts = terms.stream()
-                .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
+        return calculatePercentages(terms, null);
+    }
+
+    private List<FrequencyResult> calculatePercentages(List<String> terms, Sorting sorting) {
+        Comparator<Map.Entry<String, Long>> comparator = Map.Entry.<String, Long>comparingByValue().reversed();
+        if (sorting == Sorting.ALPHABETICAL) {
+            comparator = Map.Entry.<String, Long>comparingByKey();
+        }
+
+        Map<String, Long> counts = terms.stream().collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
         double denominator = terms.size();
-        List<FrequencyResult> results = new ArrayList<>();
         return counts.entrySet().stream()
-                .sorted(Map.Entry.<String, Long>comparingByValue().reversed()) // higher percentage first
-                .map(e -> new FrequencyResult(e.getKey(), e.getValue(), e.getValue() / denominator * 100))
+                .sorted(comparator) // higher percentage first
+                .map(e -> new FrequencyResult(e.getKey(), e.getValue(), round(e.getValue() / denominator * 100)))
                 .collect(Collectors.toList());
     }
 
-    private List<String> extract(String texto, Separation separation) {
-        return IntStream.rangeClosed(0, texto.length() - separation.getValue())
-                .mapToObj(i -> texto.substring(i, i + separation.getValue()))
+    private List<String> extract(String text, Separation separation, long limit) {
+        return IntStream.rangeClosed(0, text.length() - separation.getValue())
+                .mapToObj(i -> text.substring(i, i + separation.getValue()))
+                .limit(limit)
                 .collect(Collectors.toList());
+    }
+
+    private double round(double toRound) {
+        return Double.parseDouble(df.format(toRound));
     }
 }

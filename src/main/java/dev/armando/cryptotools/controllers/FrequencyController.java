@@ -18,9 +18,10 @@ public class FrequencyController {
 
     @PostMapping
     public ResponseEntity<FrequencyResponse> get(@RequestBody String texto,
-                                                 @RequestHeader(required = false) Sorting sorting
+                                                 @RequestParam(required = false) Sorting sorting,
+                                                 @RequestParam(required = false) Long limit
     ) {
-        FrequencyResponse response = frequencyService.getFrequencies(texto, sorting);
+        FrequencyResponse response = frequencyService.getFrequencies(texto, sorting, limit);
         return ResponseEntity.ok(response);
     }
 }

@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.List;
+import java.util.Map;
 
 @Data
 @NoArgsConstructor
@@ -14,6 +15,7 @@ import java.util.List;
 @Builder
 public class FrequencyResponse {
     private String probableLanguage;
+    private Map<String, Double> languageProbabilities;
     private List<FrequencyResult> letters;
     private List<FrequencyResult> bigrams;
     private List<FrequencyResult> trigrams;
