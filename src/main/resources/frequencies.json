@@ -1,6 +1,6 @@
 [
   {
-    "language": "spanish",
+    "language": "es",
     "values": [
       "13.676",
       "12.529",
@@ -31,7 +31,7 @@
     ]
   },
   {
-    "language": "english",
+    "language": "en",
     "values": [
       "13.105",
       "10.468",
@@ -62,7 +62,7 @@
     ]
   },
   {
-    "language": "french",
+    "language": "fr",
     "values": [
       "17.564",
       "8.147",
@@ -93,7 +93,7 @@
     ]
   },
   {
-    "language": "german",
+    "language": "de",
     "values": [
       "16.693",
       "9.905",
