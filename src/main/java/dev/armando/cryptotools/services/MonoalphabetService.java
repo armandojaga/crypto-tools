@@ -43,13 +43,13 @@ public class MonoalphabetService {
             limit = MOST_RELEVANT_RESULT_AMOUNT;
         }
 
-        List<String> letters = extract(text, Separation.LETTERS, Long.MAX_VALUE);
-        List<String> brigrams = extract(text, Separation.BIGRAMS, limit);
-        List<String> trigrams = extract(text, Separation.TRIGRAMS, limit);
+        List<String> letters = extract(text, Separation.LETTERS);
+        List<String> brigrams = extract(text, Separation.BIGRAMS);
+        List<String> trigrams = extract(text, Separation.TRIGRAMS);
 
         List<FrequencyResult> letterFrequency = calculatePercentages(letters, sorting);
-        List<FrequencyResult> bigramsFrequency = calculatePercentages(brigrams);
-        List<FrequencyResult> trigramsFrequency = calculatePercentages(trigrams);
+        List<FrequencyResult> bigramsFrequency = calculatePercentages(brigrams,limit);
+        List<FrequencyResult> trigramsFrequency = calculatePercentages(trigrams,limit);
 
         List<Double> percentages = letterFrequency.stream().map(FrequencyResult::getPercentage).collect(Collectors.toList());
         Map<String, Double> languageProbabilities = getProbableLanguage(percentages);
@@ -105,14 +105,18 @@ public class MonoalphabetService {
         return probabilities;
     }
 
-    private List<FrequencyResult> calculatePercentages(List<String> terms) {
-        return calculatePercentages(terms, null);
+    private List<FrequencyResult> calculatePercentages(List<String> terms, Sorting sorting) {
+        return calculatePercentages(terms, sorting, Long.MAX_VALUE);
     }
 
-    private List<FrequencyResult> calculatePercentages(List<String> terms, Sorting sorting) {
+    private List<FrequencyResult> calculatePercentages(List<String> terms, long limit) {
+        return calculatePercentages(terms, null, limit);
+    }
+
+    private List<FrequencyResult> calculatePercentages(List<String> terms, Sorting sorting, long limit) {
         Comparator<Map.Entry<String, Long>> comparator = Map.Entry.<String, Long>comparingByValue().reversed();
         if (sorting == Sorting.ALPHABETICAL) {
-            comparator = Map.Entry.<String, Long>comparingByKey();
+            comparator = Map.Entry.comparingByKey();
         }
 
         Map<String, Long> counts = terms.stream().collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
@@ -120,13 +124,13 @@ public class MonoalphabetService {
         return counts.entrySet().stream()
                 .sorted(comparator) // higher percentage first
                 .map(e -> new FrequencyResult(e.getKey(), e.getValue(), round(e.getValue() / denominator * 100)))
+                .limit(limit)
                 .collect(Collectors.toList());
     }
 
-    private List<String> extract(String text, Separation separation, long limit) {
+    private List<String> extract(String text, Separation separation) {
         return IntStream.rangeClosed(0, text.length() - separation.getValue())
                 .mapToObj(i -> text.substring(i, i + separation.getValue()))
-                .limit(limit)
                 .collect(Collectors.toList());
     }
 
