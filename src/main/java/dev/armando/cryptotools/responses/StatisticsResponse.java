@@ -13,7 +13,7 @@ import java.util.Map;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class FrequencyResponse {
+public class StatisticsResponse {
     private String probableLanguage;
     private Map<String, Double> languageProbabilities;
     private List<FrequencyResult> letters;

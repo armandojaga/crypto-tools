@@ -6,7 +6,7 @@ import dev.armando.cryptotools.models.FrequencyResult;
 import dev.armando.cryptotools.models.enums.Language;
 import dev.armando.cryptotools.models.enums.Separation;
 import dev.armando.cryptotools.models.enums.Sorting;
-import dev.armando.cryptotools.responses.FrequencyResponse;
+import dev.armando.cryptotools.responses.StatisticsResponse;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -34,7 +34,7 @@ public class MonoalphabetService {
         df = new DecimalFormat("##.###");
     }
 
-    public FrequencyResponse processFrequencies(String text, Sorting sorting, Long limit) {
+    public StatisticsResponse processFrequencies(String text, Sorting sorting, Long limit) {
         if (Objects.isNull(sorting)) {
             sorting = Sorting.PERCENTAGE;
         }
@@ -57,7 +57,7 @@ public class MonoalphabetService {
         Language language = Language.fromString(probableLanguage);
         Objects.requireNonNull(language);
 
-        return FrequencyResponse.builder()
+        return StatisticsResponse.builder()
                 .probableLanguage(language.getName())
                 .languageProbabilities(languageProbabilities)
                 .letters(letterFrequency)

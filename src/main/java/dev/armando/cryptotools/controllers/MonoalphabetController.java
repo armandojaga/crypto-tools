@@ -2,7 +2,7 @@ package dev.armando.cryptotools.controllers;
 
 import dev.armando.cryptotools.models.enums.Language;
 import dev.armando.cryptotools.models.enums.Sorting;
-import dev.armando.cryptotools.responses.FrequencyResponse;
+import dev.armando.cryptotools.responses.StatisticsResponse;
 import dev.armando.cryptotools.services.MonoalphabetService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -22,11 +22,11 @@ public class MonoalphabetController {
     }
 
     @PostMapping("/statistics")
-    public ResponseEntity<FrequencyResponse> processFrequency(@NotNull @RequestBody String texto,
-                                                              @RequestParam(required = false) Sorting sorting,
-                                                              @RequestParam(required = false) Long limit
+    public ResponseEntity<StatisticsResponse> processFrequency(@NotNull @RequestBody String texto,
+                                                               @RequestParam(required = false) Sorting sorting,
+                                                               @RequestParam(required = false) Long limit
     ) {
-        FrequencyResponse response = monoalphabetService.processFrequencies(texto, sorting, limit);
+        StatisticsResponse response = monoalphabetService.processFrequencies(texto, sorting, limit);
         return ResponseEntity.ok(response);
     }
 
