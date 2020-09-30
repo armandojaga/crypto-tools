@@ -39,7 +39,7 @@ public class MonoalphabetService {
             sorting = Sorting.PERCENTAGE;
         }
 
-        if (Objects.isNull(limit) || limit == 0) {
+        if (Objects.isNull(limit) || limit <= 0) {
             limit = MOST_RELEVANT_RESULT_AMOUNT;
         }
 
