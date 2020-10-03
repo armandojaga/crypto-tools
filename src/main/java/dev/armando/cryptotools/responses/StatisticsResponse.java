@@ -15,6 +15,7 @@ import java.util.Map;
 @Builder
 public class StatisticsResponse {
     private String probableLanguage;
+    private String probableLanguageLocale;
     private Map<String, Double> languageProbabilities;
     private List<FrequencyResult> letters;
     private List<FrequencyResult> bigrams;

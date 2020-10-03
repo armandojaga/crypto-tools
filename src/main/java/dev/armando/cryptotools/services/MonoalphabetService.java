@@ -1,8 +1,9 @@
 package dev.armando.cryptotools.services;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import dev.armando.cryptotools.models.Frequency;
 import dev.armando.cryptotools.models.FrequencyResult;
+import dev.armando.cryptotools.models.LanguageMapping;
+import dev.armando.cryptotools.models.LetterFrequency;
 import dev.armando.cryptotools.models.enums.Language;
 import dev.armando.cryptotools.models.enums.Separation;
 import dev.armando.cryptotools.models.enums.Sorting;
@@ -25,11 +26,11 @@ public class MonoalphabetService {
 
     private static final long MOST_RELEVANT_RESULT_AMOUNT = 20;
 
-    private final List<Frequency> frequencies;
+    private final List<LanguageMapping> frequencies;
 
     DecimalFormat df;
 
-    public MonoalphabetService(List<Frequency> frequencies) {
+    public MonoalphabetService(List<LanguageMapping> frequencies) {
         this.frequencies = frequencies;
         df = new DecimalFormat("##.###");
     }
@@ -48,8 +49,8 @@ public class MonoalphabetService {
         List<String> trigrams = extract(text, Separation.TRIGRAMS);
 
         List<FrequencyResult> letterFrequency = calculatePercentages(letters, sorting);
-        List<FrequencyResult> bigramsFrequency = calculatePercentages(brigrams,limit);
-        List<FrequencyResult> trigramsFrequency = calculatePercentages(trigrams,limit);
+        List<FrequencyResult> bigramsFrequency = calculatePercentages(brigrams, limit);
+        List<FrequencyResult> trigramsFrequency = calculatePercentages(trigrams, limit);
 
         List<Double> percentages = letterFrequency.stream().map(FrequencyResult::getPercentage).collect(Collectors.toList());
         Map<String, Double> languageProbabilities = getProbableLanguage(percentages);
@@ -59,6 +60,7 @@ public class MonoalphabetService {
 
         return StatisticsResponse.builder()
                 .probableLanguage(language.getName())
+                .probableLanguageLocale(language.getLocale())
                 .languageProbabilities(languageProbabilities)
                 .letters(letterFrequency)
                 .bigrams(bigramsFrequency)
@@ -91,14 +93,14 @@ public class MonoalphabetService {
             return null;
         }
         Map<String, Double> probabilities = new HashMap<>();
-        for (Frequency f : this.frequencies) {
+        for (LanguageMapping f : this.frequencies) {
             double probability = 0;
-            for (int i = 0; i < f.getValues().size(); i++) {
+            for (int i = 0; i < f.getLetterFrequencies().size(); i++) {
                 double occurrence = 0;
                 if (i < frequencies.size()) {
                     occurrence = frequencies.get(i);
                 }
-                probability += Math.pow(f.getValues().get(i) - occurrence, 2);
+                probability += Math.pow(f.getLetterFrequencies().get(i).getFrequency() - occurrence, 2);
             }
             probabilities.put(f.getLanguage(), round(probability));
         }
@@ -136,5 +138,9 @@ public class MonoalphabetService {
 
     private double round(double toRound) {
         return Double.parseDouble(df.format(toRound));
+    }
+
+    public List<LetterFrequency> getLetters(Language language) {
+        return frequencies.stream().filter(l -> l.getLanguage().equals(language.getLocale())).findFirst().orElseThrow().getLetterFrequencies();
     }
 }

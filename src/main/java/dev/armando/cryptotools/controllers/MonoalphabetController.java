@@ -1,5 +1,6 @@
 package dev.armando.cryptotools.controllers;
 
+import dev.armando.cryptotools.models.LetterFrequency;
 import dev.armando.cryptotools.models.enums.Language;
 import dev.armando.cryptotools.models.enums.Sorting;
 import dev.armando.cryptotools.responses.StatisticsResponse;
@@ -28,6 +29,11 @@ public class MonoalphabetController {
     ) {
         StatisticsResponse response = monoalphabetService.processFrequencies(texto, sorting, limit);
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/letters")
+    public ResponseEntity<List<LetterFrequency>> getLetters(@NotNull @RequestParam Language language) throws IOException {
+        return ResponseEntity.ok(monoalphabetService.getLetters(language));
     }
 
     @GetMapping("/bigrams")
