@@ -8,6 +8,7 @@ import dev.armando.cryptotools.models.enums.Language;
 import dev.armando.cryptotools.models.enums.Separation;
 import dev.armando.cryptotools.models.enums.Sorting;
 import dev.armando.cryptotools.responses.StatisticsResponse;
+import dev.armando.cryptotools.util.ExtractionUtil;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -19,7 +20,6 @@ import java.text.DecimalFormat;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 @Service
 public class MonoalphabetService {
@@ -131,9 +131,7 @@ public class MonoalphabetService {
     }
 
     private List<String> extract(String text, Separation separation) {
-        return IntStream.rangeClosed(0, text.length() - separation.getValue())
-                .mapToObj(i -> text.substring(i, i + separation.getValue()))
-                .collect(Collectors.toList());
+        return ExtractionUtil.extract(text, separation.getValue());
     }
 
     private double round(double toRound) {
@@ -141,6 +139,10 @@ public class MonoalphabetService {
     }
 
     public List<LetterFrequency> getLetters(Language language) {
-        return frequencies.stream().filter(l -> l.getLanguage().equals(language.getLocale())).findFirst().orElseThrow().getLetterFrequencies();
+        return frequencies.stream()
+                .filter(l -> l.getLanguage().equals(language.getLocale()))
+                .findFirst()
+                .orElseThrow()
+                .getLetterFrequencies();
     }
 }
